@@ -57,3 +57,25 @@ If TXBUF is loaded exactly 2 SPI clock cycles late, then the USCI becomes offset
 ![captureF](https://user-images.githubusercontent.com/42620235/149661203-8f909958-1f0a-4aae-865a-2a7dd3014d32.png)
 
 If TXBUF is loaded more than 2 SPI clock cycles late, then the USCI becomes offset by one bit from the external clock. This transmit offset persists until the USCI is reset. It repeats the previous bit for one extra clock, then the current shift register value gets reused for the subsequent eight bits. The value in TXIFG is copied to the shift register and output for the following eight bits.
+
+### UCCKPH clear
+
+The issue is less severe when the `UCCKPH` bit isn't set, but there are still two different error behaviours when TXBUF is loaded late.
+
+#### Correct output
+
+![CaptureA](https://user-images.githubusercontent.com/42620235/150394134-36bfaddf-d513-41f5-b82f-1d9971f53d2a.png)
+
+If TXBUF is loaded early enough there is no problem. The new value is transferred into the internal transmit shift register of the USCI, and is used as the next byte to output. 
+
+#### Error 1: Next byte replaced by previous
+
+![CaptureB](https://user-images.githubusercontent.com/42620235/150394136-ff259bab-7bfe-4557-b281-4a472693caa7.png)
+
+If TXBUF is loaded up to 1 SPI clock cycle late, then the current shift register value gets reused for the subsequent eight bits. The TXIFG bit is set again, so the value in TXBUF is overwritten without ever being sent. 
+
+#### Error 2: Repeated last byte
+
+![CaptureC](https://user-images.githubusercontent.com/42620235/150394137-ea47475b-3482-4338-8c44-88cad15faa95.png)
+
+If TXBUF is loaded more than 1 SPI clock cycle late, then the current shift register value gets reused for the subsequent eight bits. The value in TXIFG is copied to the shift register and output for the following eight bits.
